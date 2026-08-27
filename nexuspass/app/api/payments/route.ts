@@ -24,29 +24,43 @@ function validateEmail(email: string): string | null {
   return null;
 }
 
+// 3. FUNCTION PARA I-VALIDATE ANG PROOF URL (IMAGES LANG)
+function validateProofUrl(proofUrl: string): string | null {
+  if (!proofUrl) {
+    return "Proof of payment is required.";
+  }
+  return null;
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.json();
     const { user_id, user_name, user_email, amount, payment_method, proof_url, reference_number } = formData;
 
-    // 3. VALIDATION: LAHAT NG FIELD AY DAPAT MAY LAMAN
+    // 4. VALIDATION: LAHAT NG FIELD AY DAPAT MAY LAMAN
     if (!user_id || !user_name || !user_email || !amount || !payment_method || !proof_url || !reference_number) {
       return NextResponse.json({ error: "Please fill out all required fields." }, { status: 400 });
     }
 
-    // 4. VALIDATE ANG AMOUNT (SERVER-SIDE)
+    // 5. VALIDATE ANG AMOUNT (SERVER-SIDE)
     const amountError = validateAmount(amount);
     if (amountError) {
       return NextResponse.json({ error: amountError }, { status: 400 });
     }
 
-    // 5. VALIDATE ANG EMAIL (SERVER-SIDE)
+    // 6. VALIDATE ANG EMAIL (SERVER-SIDE)
     const emailError = validateEmail(user_email);
     if (emailError) {
       return NextResponse.json({ error: emailError }, { status: 400 });
     }
 
-    // 6. I-SAVE ANG PAYMENT SA DATABASE
+    // 7. VALIDATE ANG PROOF URL
+    const proofError = validateProofUrl(proof_url);
+    if (proofError) {
+      return NextResponse.json({ error: proofError }, { status: 400 });
+    }
+
+    // 8. I-SAVE ANG PAYMENT SA DATABASE
     const { error: paymentError } = await serverSupabase
       .from("payments")
       .insert({
@@ -55,7 +69,7 @@ export async function POST(request: Request) {
         user_email: user_email,
         amount: amount,
         payment_method: payment_method,
-        status: "pending",
+        status: "pending", // Ito ay "Pending Review" para ma-verify ng admin
         proof_url: proof_url,
         reference_number: reference_number,
       });
