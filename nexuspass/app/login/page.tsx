@@ -13,21 +13,56 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // ITO YUNG BAGONG FUNCTION PARA I-VALIDATE ANG EMAIL
+  function validateEmail(email: string): string | null {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return "Invalid email format.";
+    }
+    return null;
+  }
+
+  // ITO YUNG BAGONG FUNCTION PARA I-VALIDATE ANG PASSWORD
+  function validatePassword(password: string): string | null {
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long.";
+    }
+    return null;
+  }
+
   async function handleLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     setLoading(true);
     setMessage("");
 
+    // SANITIZE ANG EMAIL
+    const sanitizedEmail = email.trim().replace(/[<>]/g, "");
+
+    // VALIDATE ANG EMAIL AT PASSWORD
+    const emailError = validateEmail(sanitizedEmail);
+    if (emailError) {
+      setMessage(emailError);
+      setLoading(false);
+      return;
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setMessage(passwordError);
+      setLoading(false);
+      return;
+    }
+
     // LOGIN TO SUPABASE AUTH
     const { data: authData, error: loginError } =
       await supabase.auth.signInWithPassword({
-        email,
+        email: sanitizedEmail,
         password,
       });
 
     if (loginError) {
-      setMessage(loginError.message);
+      setMessage("Login failed. Please check your email and password.");
       setLoading(false);
       return;
     }
